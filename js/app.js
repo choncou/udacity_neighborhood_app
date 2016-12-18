@@ -2,7 +2,7 @@
  * Created by choncou on 2016/12/16.
  */
 function googleError() {
-    alert('Oops, we couldnt connect. Please try again later.')
+    alert('Oops, we couldnt connect. Please try again later.');
 }
 
 // The base url for the flickr photos endpoint
@@ -78,7 +78,7 @@ var googleReadyCallback;
 
 // Create the url for the flickr image
 function generateFlickrImageUrl(photo) {
-    return 'https://farm' + photo.farm + '.staticflickr.com/' + photo.server + '/' + photo.id + '_' + photo.secret + '_q.jpg'
+    return 'https://farm' + photo.farm + '.staticflickr.com/' + photo.server + '/' + photo.id + '_' + photo.secret + '_q.jpg';
 }
 
 function AppViewModel() {
@@ -116,7 +116,7 @@ function AppViewModel() {
 
         // Hide all markers
         self.markers.forEach(function (marker) {
-            marker.setVisible(false)
+            marker.setVisible(false);
         });
 
         // show markers for needed places
@@ -162,7 +162,7 @@ function AppViewModel() {
             self.selectPlace(place);
         });
         place.marker = marker;
-        return marker
+        return marker;
     }
 
     // Called by initMap when google is initialised
@@ -231,7 +231,7 @@ function AppViewModel() {
 
     // Fail gracefully when an error occurs unexpectedly
     function showConnectionFailure() {
-        alert('We are having trouble connecting. Try again later.')
+        alert('We are having trouble connecting. Try again later.');
     }
 }
 
