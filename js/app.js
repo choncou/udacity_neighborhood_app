@@ -1,6 +1,10 @@
 /**
  * Created by choncou on 2016/12/16.
  */
+function googleError() {
+    alert('Oops, we couldnt connect. Please try again later.')
+}
+
 // The base url for the flickr photos endpoint
 var FLICKR_BASE = 'https://api.flickr.com/services/rest/?method=flickr.photos.search&format=json&api_key=bdf3ed733e8c3707baa345f03a715f37';
 
@@ -110,16 +114,14 @@ function AppViewModel() {
             return places;
         }
 
-        // Remove all markers
+        // Hide all markers
         self.markers.forEach(function (marker) {
-            marker.setMap(null);
+            marker.setVisible(false)
         });
-        self.markers.length = 0;
 
-        // Add markers to array if they are included in the filtered result
+        // show markers for needed places
         places.forEach(function (place) {
-            var marker = createMarker(place);
-            self.markers.push(marker);
+            place.marker.setVisible(true);
         });
         setMapBounds();
 
@@ -141,7 +143,7 @@ function AppViewModel() {
         var place = self.selectedPlace();
         var infoWindow = new google.maps.InfoWindow({
             content: "<h3>" + place.name + "</h3>",
-            disableAutoPan: true,
+            disableAutoPan: true
         });
         infoWindow.open(map, place.marker);
         place.marker.setAnimation(null);
@@ -177,10 +179,12 @@ function AppViewModel() {
     function setMapBounds() {
         var bounds = new google.maps.LatLngBounds();
         self.markers.forEach(function (marker) {
-            bounds.extend(marker.getPosition());
+            if (marker.getVisible()) {
+                bounds.extend(marker.getPosition());
+            }
         });
         map.fitBounds(bounds);
-    };
+    }
 
     // Will automatically compute and set what images should be displayed
     self.computeSelectedPlaceImages = ko.computed(function () {
@@ -201,34 +205,35 @@ function AppViewModel() {
                 radius: 0.5,
                 per_page: 6,
                 accuracy: 16
-            },
-            success: function (data, status) {
-                // Parse flickr response (The response is sent as a string with enclosed with other text)
-                // This removes the first 14 characters and the last character then converts to JSON
-                var responseObject = JSON.parse(data.slice(14, data.length-1));
+            }
+        })
+        .done(function (data) {
+            // Parse flickr response (The response is sent as a string with enclosed with other text)
+            // This removes the first 14 characters and the last character then converts to JSON
+            var responseObject = JSON.parse(data.slice(14, data.length-1));
 
-                // Check if flickr request was successful
-                if (responseObject.stat === 'ok') {
-                    responseObject.photos.photo.forEach(function (photo) {
-                        self.selectedPlaceImages.push({ url: generateFlickrImageUrl(photo) });
-                    });
-                } else {
-                    console.log("Flickr Fetch Failed");
-                    showConnectionFailure();
-                }
-            },
-            error: function (error) {
+            // Check if flickr request was successful
+            if (responseObject.stat === 'ok') {
+                responseObject.photos.photo.forEach(function (photo) {
+                    self.selectedPlaceImages.push({ url: generateFlickrImageUrl(photo) });
+                });
+            } else {
                 console.log("Flickr Fetch Failed");
                 showConnectionFailure();
             }
         })
+        .fail(function (error) {
+            console.log("Flickr Fetch Failed");
+            console.log(error);
+            showConnectionFailure();
+        });
     }
 
     // Fail gracefully when an error occurs unexpectedly
     function showConnectionFailure() {
         alert('We are having trouble connecting. Try again later.')
     }
-};
+}
 
 // Toggle class that will animate the sidebar to show/hide
 $('#menu-button').click(toggleSidebar);
