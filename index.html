@@ -27,21 +27,23 @@
             <input type="button" value="Filter" class="btn btn-primary btn-search">
         </div>
         <ul class="sidebar-list" data-bind="foreach: filteredPlaces">
-            <li class="place-item" data-bind="text: name, click: $root.displayInfo"></li>
+            <li class="place-item" data-bind="text: name, click: $root.selectPlace"></li>
         </ul>
     </section>
 
-    <section id="map" class=""></section>
+    <section id="map"></section>
 
     <div class="modal-container" data-bind="visible: selectedPlace, with: selectedPlace">
         <section class="modal">
             <button id="#close-modal" class="btn-close-modal" data-bind="click: $root.clearSelection">&#10060;</button>
             <h1 class="modal-header" data-bind="text: name"></h1>
-            <p>
-                Some stuff about the place
-            </p>
+            <h3 data-bind="visible: $root.selectedPlaceImages().length > 0">Some Images around here</h3>
+            <div class="place-images" data-bind="foreach: $root.selectedPlaceImages">
+                <img class="place-image" data-bind="attr: { src: url }">
+            </div>
         </section>
     </div>
+
     <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAgD4ajSVr1Pk98MJl3_VrDQmAUCXWQx1s&callback=initMap"
             async defer></script>
 

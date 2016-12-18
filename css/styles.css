@@ -112,10 +112,29 @@ html, body {
     border-radius: 4px;
     box-shadow: 0 0 5px #333;
     width: 80%;
-    max-width: 450px;
+    max-width: 500px;
     padding: 10px;
 }
 
 .btn-close-modal {
     float: right;
+}
+
+.place-images {
+    display: flex;
+    flex-wrap: wrap;
+}
+
+.place-image {
+    width: 100px;
+    height: 100px;
+    margin: 0 auto;
+    padding: 5px;
+}
+
+@media screen and (min-width: 500px) {
+    .place-image {
+        width: 150px;
+        height: 150px;
+    }
 }

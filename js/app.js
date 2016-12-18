@@ -1,6 +1,8 @@
 /**
  * Created by choncou on 2016/12/16.
  */
+// The base url for the flickr photos endpoint
+var FLICKR_BASE = 'https://api.flickr.com/services/rest/?method=flickr.photos.search&format=json&api_key=bdf3ed733e8c3707baa345f03a715f37';
 
 // List of places
 var PLACES = [
@@ -10,19 +12,12 @@ var PLACES = [
             lat: 37.7762593,
             lng: -122.432758
         }
-    }, // https://google-developers.appspot.com/maps/documentation/utils/geocoder/#place_id%3DChIJuX92JKWAhYARxVmeb8DQIYQ
+    },
     {
         name: "Alamo Square Park",
         location: {
             lat: 37.7763366,
             lng: -122.4346917
-        }
-    },
-    {
-        name: "Ida B Wells High School",
-        location: {
-            lat: 37.775089,
-            lng: -122.434028
         }
     },
     {
@@ -70,10 +65,18 @@ function initMap() {
         if (this.getZoom() > 17) {
             this.setZoom(17);
         }
+        else if (this.getZoom() < 15) { // Minimum zoom
+            this.setZoom(15);
+        }
     });
 }
-
 var googleReadyCallback;
+
+// Create the url for the flickr image
+function generateFlickrImageUrl(photo) {
+    return 'https://farm' + photo.farm + '.staticflickr.com/' + photo.server + '/' + photo.id + '_' + photo.secret + '_q.jpg'
+}
+
 function AppViewModel() {
     var self = this;
 
@@ -81,9 +84,14 @@ function AppViewModel() {
     self.places = PLACES;
     self.markers = [];
 
+    // Input text from the filter input
     self.filterText = ko.observable('');
 
+    // A place that was clicked either in the list or it's marker
     self.selectedPlace = ko.observable();
+
+    // store images for the selected place
+    self.selectedPlaceImages = ko.observableArray([]);
 
     // List of places after applying the filter
     self.filteredPlaces = ko.computed(function () {
@@ -109,7 +117,6 @@ function AppViewModel() {
         self.markers.length = 0;
 
         // Add markers to array if they are included in the filtered result
-        console.log(places);
         places.forEach(function (place) {
             var marker = createMarker(place);
             self.markers.push(marker);
@@ -119,6 +126,29 @@ function AppViewModel() {
         return places;
     });
 
+    // Set the selected place
+    self.selectPlace = function (place) {
+        self.selectedPlace(place);
+        map.setCenter(place.marker.getPosition());
+        place.marker.setAnimation(google.maps.Animation.BOUNCE);
+        if ($('#sidebar').hasClass('sidebar-show')) {
+            toggleSidebar();
+        }
+    };
+
+    // Set that no place is currently selected
+    self.clearSelection = function () {
+        var place = self.selectedPlace();
+        var infoWindow = new google.maps.InfoWindow({
+            content: "<h3>" + place.name + "</h3>",
+            disableAutoPan: true,
+        });
+        infoWindow.open(map, place.marker);
+        place.marker.setAnimation(null);
+        self.selectedPlace(null);
+    };
+
+
     function createMarker(place) {
         var marker = new google.maps.Marker({
             map: map,
@@ -127,16 +157,16 @@ function AppViewModel() {
             title: place.name
         });
         marker.addListener('click', function () {
-           self.selectPlace(place);
+            self.selectPlace(place);
         });
-
+        place.marker = marker;
         return marker
     }
 
+    // Called by initMap when google is initialised
     googleReadyCallback = function () {
         // Add markers to array if they are included in the filtered result
         var visiblePlaces = self.filteredPlaces();
-        console.log(visiblePlaces);
         visiblePlaces.forEach(function (place) {
             self.markers.push(createMarker(place));
         });
@@ -152,22 +182,60 @@ function AppViewModel() {
         map.fitBounds(bounds);
     };
 
-    self.selectPlace = function (place) {
-        self.selectedPlace(place);
-    };
+    // Will automatically compute and set what images should be displayed
+    self.computeSelectedPlaceImages = ko.computed(function () {
+        var selectedPlace = self.selectedPlace();
+        if (selectedPlace) {
+            getFlickrImages(selectedPlace);
+        } else {
+            self.selectedPlaceImages([]);
+        }
+    });
 
-    self.clearSelection = function () {
-        self.selectedPlace(null);
+    // Function to call Flickr API and get first 6 images taken at this place
+    function getFlickrImages(place) {
+        $.ajax(FLICKR_BASE, {
+            data: {
+                lat: place.location.lat,
+                lon: place.location.lng,
+                radius: 0.5,
+                per_page: 6,
+                accuracy: 16
+            },
+            success: function (data, status) {
+                // Parse flickr response (The response is sent as a string with enclosed with other text)
+                // This removes the first 14 characters and the last character then converts to JSON
+                var responseObject = JSON.parse(data.slice(14, data.length-1));
+
+                // Check if flickr request was successful
+                if (responseObject.stat === 'ok') {
+                    responseObject.photos.photo.forEach(function (photo) {
+                        self.selectedPlaceImages.push({ url: generateFlickrImageUrl(photo) });
+                    });
+                } else {
+                    console.log("Flickr Fetch Failed");
+                    showConnectionFailure();
+                }
+            },
+            error: function (error) {
+                console.log("Flickr Fetch Failed");
+                showConnectionFailure();
+            }
+        })
+    }
+
+    // Fail gracefully when an error occurs unexpectedly
+    function showConnectionFailure() {
+        alert('We are having trouble connecting. Try again later.')
     }
 };
 
 // Toggle class that will animate the sidebar to show/hide
-$('#menu-button').click(function () {
+$('#menu-button').click(toggleSidebar);
+
+function toggleSidebar() {
     $('#sidebar').toggleClass('sidebar-show');
     $('#map').toggleClass('map-sidebar-showing');
-
-});
+}
 
 ko.applyBindings(new AppViewModel());
-
-// TODO: Create popup modal to show info with third party api
