@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <link href="css/bootstrap.min.css" rel="stylesheet">
+    <link href="css/styles.css" rel="stylesheet">
+    <script src="https://code.jquery.com/jquery-3.1.1.min.js"
+            integrity="sha256-hVVnYaiADRTO2PzUGmuLJr8BLUSjGIZsDYGmIJLv2b8="
+            crossorigin="anonymous"></script>
+    <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/knockout/3.4.1/knockout-min.js"></script>
+    <script src="js/app.js" defer></script>
+</head>
+<body>
+    <header class="nav-bar">
+        <button id="menu-button">☰</button>
+    </header>
+
+    <section id="sidebar">
+        <h1 class="sidebar-header">Hayes Valley</h1>
+        <div class="form-group search-form">
+            <input id="place-search" type="search" placeholder="Enter a place or address" class="sidebar-search form-control"
+            data-bind="value: filterText">
+            <input type="button" value="Filter" class="btn btn-primary btn-search">
+        </div>
+        <ul class="sidebar-list" data-bind="foreach: filteredPlaces">
+            <li class="place-item" data-bind="text: name, click: $root.displayInfo"></li>
+        </ul>
+    </section>
+
+    <section id="map" class=""></section>
+
+    <div class="modal-container" data-bind="visible: selectedPlace, with: selectedPlace">
+        <section class="modal">
+            <button id="#close-modal" class="btn-close-modal" data-bind="click: $root.clearSelection">&#10060;</button>
+            <h1 class="modal-header" data-bind="text: name"></h1>
+            <p>
+                Some stuff about the place
+            </p>
+        </section>
+    </div>
+    <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAgD4ajSVr1Pk98MJl3_VrDQmAUCXWQx1s&callback=initMap"
+            async defer></script>
+
+</body>
+</html>
